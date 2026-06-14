@@ -10,7 +10,7 @@ router = APIRouter(
 )
 
 @router.post("")
-def create_trip_assignments(trip_assignments: Trip_assignmentsCreate, current_user=Depends(get_current_user)):
+def create_trip_assignments(trip_assignments: Trip_assignmentsCreate, current_user=Depends(require_admin)):
     with engine.begin() as conn:
         result = conn.execute(
             text("""
@@ -91,7 +91,7 @@ def get_trip_assignment(assignment_id: int, current_user=Depends(get_current_use
 
 
 @router.put("/{assignment_id}")
-def update_trip_assignments(assignment_id: int, assignment: Trip_assignmentsUpdate, current_user=Depends(get_current_user)):
+def update_trip_assignments(assignment_id: int, assignment: Trip_assignmentsUpdate, current_user=Depends(require_admin)):
     with engine.begin() as conn:
         result = conn.execute(
             text("""

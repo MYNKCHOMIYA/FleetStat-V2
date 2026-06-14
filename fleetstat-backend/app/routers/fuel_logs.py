@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException ,Depends
 from sqlalchemy import text
 from app.database import engine
 from app.schemas import *
-from app.dependencies import require_admin, get_current_user
+from app.dependencies import require_admin, get_current_user, verify_driver_fuel_log
 
 router = APIRouter(
     prefix="/fuel_logs",
@@ -10,7 +10,7 @@ router = APIRouter(
 )
 
 @router.post("")
-def create_fuel_log(log: FuelLogCreate, current_user=Depends(get_current_user)):
+def create_fuel_log(log: FuelLogCreate, current_user=Depends(require_admin)):
     with engine.begin() as conn:
         result = conn.execute(
             text("""
@@ -48,7 +48,7 @@ def create_fuel_log(log: FuelLogCreate, current_user=Depends(get_current_user)):
 
 
 @router.get("")
-def get_fuel_logs(current_user=Depends(get_current_user)):
+def get_fuel_logs(current_user=Depends(require_admin)):
     with engine.connect() as conn:
         result = conn.execute(text("""
             SELECT * FROM fuel_logs
@@ -73,6 +73,8 @@ def get_fuel_logs(current_user=Depends(get_current_user)):
 @router.get("/{fuel_log_id}")
 def get_fuel_log(fuel_log_id: int, current_user=Depends(get_current_user)):
     with engine.connect() as conn:
+        if current_user["role"] != "admin":
+            verify_driver_fuel_log(conn, fuel_log_id, int(current_user["sub"]))
         result = conn.execute(
             text("""
                 SELECT * FROM fuel_logs
@@ -101,7 +103,7 @@ def get_fuel_log(fuel_log_id: int, current_user=Depends(get_current_user)):
 
 
 @router.put("/{fuel_log_id}")
-def update_fuel_log(fuel_log_id: int, log: FuelLogUpdate, current_user=Depends(get_current_user)):
+def update_fuel_log(fuel_log_id: int, log: FuelLogUpdate, current_user=Depends(require_admin)):
     with engine.begin() as conn:
         result = conn.execute(
             text("""

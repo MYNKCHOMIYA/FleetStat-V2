@@ -252,3 +252,10 @@ class LoginRequest(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str
+
+class TripFuelLogCreate(BaseModel):
+    fuel_amount: float
+    fuel_cost: float
+    
+class DamageStatusUpdate(BaseModel):
+        status:str

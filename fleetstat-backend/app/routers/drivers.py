@@ -3,7 +3,7 @@ from sqlalchemy import text
 
 from app.database import engine
 from app.schemas import DriverCreate, DriverUpdate
-from app.dependencies import require_admin, get_current_user
+from app.dependencies import require_admin, get_current_user, require_driver
 
 router = APIRouter(
     prefix="/drivers",
@@ -89,6 +89,90 @@ def get_drivers(current_user=Depends(require_admin)):
             for row in rows
         ]
 
+@router.get("/me")
+def get_my_driver_profile(
+    current_user=Depends(require_driver)
+):
+    with engine.connect() as conn:
+
+        result = conn.execute(
+            text("""
+                SELECT *
+                FROM drivers
+                WHERE user_id = :user_id
+                AND is_active = TRUE
+            """),
+            {
+                "user_id": int(current_user["sub"])
+            }
+        )
+
+        driver = result.fetchone()
+
+        if driver is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Driver profile not found"
+            )
+
+        return {
+            "driver_id": driver.driver_id,
+            "full_name": driver.full_name,
+            "email": driver.email,
+            "phone_number": driver.phone_number,
+            "availability_status": driver.availability_status,
+            "employment_status": driver.employment_status
+        }
+
+
+@router.get("/my-fuel-logs")
+def get_my_fuel_logs(
+    current_user=Depends(require_driver)
+):
+    with engine.connect() as conn:
+        result = conn.execute(
+            text("""
+                SELECT 
+                    fl.fuel_log_id,
+                    fl.trip_id,
+                    fl.fuel_amount,
+                    fl.fuel_cost,
+                    fl.filled_at,
+                    t.license_plate,
+                    t.truck_id
+                FROM fuel_logs fl
+                JOIN trips tr ON fl.trip_id = tr.trip_id
+                JOIN trip_assignments ta ON tr.trip_id = ta.trip_id
+                JOIN trucks t ON tr.truck_id = t.truck_id
+                JOIN drivers d ON ta.driver_id = d.driver_id
+                WHERE d.user_id = :user_id
+                ORDER BY fl.filled_at DESC
+            """),
+            {
+                "user_id": int(current_user["sub"])
+            }
+        )
+        rows = result.fetchall()
+        return [
+            {
+                "fuel_log_id": row.fuel_log_id, 
+                "trip_id": row.trip_id,
+                "fuel_amount": row.fuel_amount,
+                "fuel_cost": row.fuel_cost,
+                "filled_at": row.filled_at,
+                "license_plate": row.license_plate,
+                "truck_id": row.truck_id
+            }
+            for row in rows
+        ]
+
+
+@router.get("/debug-token")
+def debug_token(
+    current_user=Depends(get_current_user)
+):
+    return current_user
+
 
 @router.get("/{driver_id}")
 def get_driver(driver_id: int, current_user=Depends(require_admin)):
@@ -116,6 +200,7 @@ def get_driver(driver_id: int, current_user=Depends(require_admin)):
             "email": row.email,
             "phone_number": row.phone_number
         }
+    
 
 
 @router.put("/{driver_id}", dependencies=[Depends(require_admin)])

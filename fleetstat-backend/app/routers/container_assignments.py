@@ -10,7 +10,7 @@ router = APIRouter(
 )
 
 @router.post("")
-def create_container_assignment(assignment: ContainerAssignmentsCreate, current_user=Depends(get_current_user)):
+def create_container_assignment(assignment: ContainerAssignmentsCreate, current_user=Depends(require_admin)):
     with engine.begin() as conn:
         result = conn.execute(
             text("""
@@ -91,7 +91,7 @@ def get_container_assignment(assignment_id: int, current_user=Depends(get_curren
 
 
 @router.put("/{assignment_id}")
-def update_container_assignment(assignment_id: int, assignment: ContainerAssignmentsUpdate, current_user=Depends(get_current_user)):
+def update_container_assignment(assignment_id: int, assignment: ContainerAssignmentsUpdate, current_user=Depends(require_admin)):
     with engine.begin() as conn:
         result = conn.execute(
             text("""
