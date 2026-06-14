@@ -111,14 +111,14 @@ class Trip_assignmentsUpdate(BaseModel):
 class UserCreate(BaseModel):
     username: str
     email: str
-    password_hash: str
+    password: str
     role: str
 
 
 class UserUpdate(BaseModel):
     username: str
     email: str
-    password_hash: str
+    password: str
     role: str
     is_active: bool
 

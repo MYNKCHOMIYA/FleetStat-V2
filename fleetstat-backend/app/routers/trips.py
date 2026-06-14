@@ -89,7 +89,7 @@ def get_trips(current_user=Depends(get_current_user)):
 
 
 @router.get("/{trip_id}")
-def get_trips(trip_id:int, current_user=Depends(get_current_user)):
+def get_trip(trip_id:int, current_user=Depends(get_current_user)):
     with engine.connect() as conn:
         result = conn.execute(text("""
             SELECT *

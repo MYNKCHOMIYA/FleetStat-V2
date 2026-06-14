@@ -5,7 +5,7 @@ from app.schemas import *
 from app.dependencies import require_admin, get_current_user
 
 router = APIRouter(
-    prefix="/paymnets",
+    prefix="/payments",
     tags=["Payments"]
 )
 @router.post("")

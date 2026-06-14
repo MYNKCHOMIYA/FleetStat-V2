@@ -90,7 +90,7 @@ def get_shipments(current_user=Depends(get_current_user)):
 
 
 @router.get("/{shipment_id}")
-def get_shipments(shipment_id:int, current_user=Depends(get_current_user)):
+def get_shipment(shipment_id:int, current_user=Depends(get_current_user)):
     with engine.connect() as conn:
         result = conn.execute(text("""
             SELECT *
@@ -105,20 +105,18 @@ def get_shipments(shipment_id:int, current_user=Depends(get_current_user)):
                     detail = "Shipment not found"
                     )
 
-        return [
-            {
-                   "trip_id" :row.trip_id,
-                    "container_id" :row.container_id,
-                    "sender_customer_id" :row.sender_customer_id,
-                    "receiver_customer_id":row.receiver_customer_id,
-                    "shipment_status":row.shipment_status,
-                    "received_date":row.received_date,
-                    "shipped_date":row.shipped_date,
-                   "delivered_date":row.delivered_date,
-                    "notes":row.notes
-            }
-            
-        ]
+        return {
+            "shipment_id": row.shipment_id,
+            "trip_id": row.trip_id,
+            "container_id": row.container_id,
+            "sender_customer_id": row.sender_customer_id,
+            "receiver_customer_id": row.receiver_customer_id,
+            "shipment_status": row.shipment_status,
+            "received_date": row.received_date,
+            "shipped_date": row.shipped_date,
+            "delivered_date": row.delivered_date,
+            "notes": row.notes
+        }
 
 
 

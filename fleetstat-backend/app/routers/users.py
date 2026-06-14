@@ -122,7 +122,7 @@ def update_user(user_id: int, user: UserUpdate,current_user=Depends(require_admi
                     
                     "username" :user.username,
                     "email":user.email,
-                    "password_hash":user.password_hash,
+                    "password_hash": hash_password(user.password),
                     "role":user.role,
                     "user_id":user_id,
             }
