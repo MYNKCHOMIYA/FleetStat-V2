@@ -28,12 +28,11 @@
 html, body {
   margin: 0; padding: 0;
   width: 100%; height: 100%;
-  overflow: hidden;
 }
 
 body {
   min-height: 100vh;
-  background-image: url("./pics/background.jpg");
+  background-image: url("./assests/background.jpg");
   background-size: cover;
   background-position: top center;
   background-repeat: no-repeat;
@@ -893,14 +892,4 @@ input.input-error {
   .glass-card { padding-top: 24px; padding-bottom: 20px; }
   .login-header { margin-bottom: 18px; }
   .logo-icon { width: 46px; height: 46px; margin-bottom: 10px; }
-}
-
-
-a,
-a:visited,
-a:link,
-a:hover,
-a:active {
-  color: #1affecb0 !important;
-  font-family: var(--heading) !important;
 }

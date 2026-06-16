@@ -108,7 +108,6 @@ function Login() {
     const [errorMsg, setErrorMsg] = useState("");
     const [errorShake, setErrorShake] = useState(false);
     const [loginSuccess, setLoginSuccess] = useState(false);
-    const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
     const cardRef = useRef(null);
 
     const handleLogin = async (e) => {
@@ -171,17 +170,6 @@ function Login() {
 
     useEffect(() => {
         if (localStorage.getItem("token")) window.location.reload();
-    }, []);
-
-    // Track mouse position for ambient elements
-    useEffect(() => {
-        const handleMouseMove = (e) => {
-            setMousePos({ x: e.clientX, y: e.clientY });
-        };
-        window.addEventListener("mousemove", handleMouseMove);
-        return () => {
-            window.removeEventListener("mousemove", handleMouseMove);
-        };
     }, []);
 
     return (
@@ -317,9 +305,10 @@ function Login() {
                             <div className="input-underline" />
                         </div>
                         {/*Password input group */}
-                        <div classname="forgot-password">
+                        <div className="forgot-password">
                             <a href="#"
                                 onClick={(e) => {
+                                    e.preventDefault();
                                     setErrorMsg("Password reset feature coming soon");
                                     setErrorShake(true);
                                     setTimeout(() => setErrorShake(false), 650);

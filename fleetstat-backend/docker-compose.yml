@@ -10,10 +10,21 @@ services:
       POSTGRES_PASSWORD: admin
 
     ports:
-      - "5432:5432"
+      - "5433:5432"
 
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/01-init.sql
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d fleetstat"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+    networks:
+      - fleetstat-network
 
   fleetstat:
     build: .
@@ -24,10 +35,25 @@ services:
       - .env
 
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
     ports:
-      - "8000:8000"
+      - "8001:8000"
+
+    networks:
+      - fleetstat-network
+
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+networks:
+  fleetstat-network:
+    driver: bridge
 
 volumes:
   postgres_data:

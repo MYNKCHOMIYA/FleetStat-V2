@@ -132,7 +132,8 @@ def get_dashboard(
             "total_shipments": total_shipments,
             "pending_shipments": pending_shipments,
             "total_revenue": float(total_revenue),
-            "fuel_cost": float(fuel_cost)
+            "fuel_cost": float(fuel_cost),
+            "total_profit":float(total_revenue)-float(fuel_cost)
         }
         
 @router.get("/dashboard/charts")

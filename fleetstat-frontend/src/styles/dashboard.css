@@ -1,0 +1,1596 @@
+/* ================================================================
+   FLEETSTAT — DASHBOARD STYLES
+   Sections:
+     1.  Box-model reset
+     2.  CSS custom properties (timing tokens)
+     3.  Shell layout (sidebar + content grid)
+     4.  Sidebar — surface
+     5.  Sidebar — inner column
+     6.  Sidebar — collapse button
+     7.  Sidebar — brand block
+     8.  Sidebar — navigation items
+     9.  Sidebar — info panel
+    10.  Sidebar — logout button
+    11.  Shared glass surface (applied to multiple elements)
+    12.  Main content area
+    13.  Dashboard header
+    14.  Eyebrow label
+    15.  Range & metric segmented tabs
+    16.  Standalone buttons (logout-btn, primary-action, menu-toggle)
+    17.  KPI metric cards
+    18.  Dashboard analytics grid
+    19.  Analytics panels
+    20.  Panel heading row
+    21.  Chart wrappers
+    22.  Truck utilization meter
+    23.  Legend pills
+    24.  Operational summary table
+    25.  Quick-actions grid
+    26.  Loading / error state
+    27.  Responsive — 1180 px (medium)
+    28.  Responsive — 860 px  (tablet / mobile drawer)
+    29.  Responsive — 620 px  (small mobile)
+   ================================================================ */
+
+
+/* ----------------------------------------------------------------
+   1. BOX-MODEL RESET
+   Every element inside the shell uses border-box so padding and
+   borders never push content beyond the container's edges.
+   ---------------------------------------------------------------- */
+.dashboard-shell,
+.dashboard-shell * {
+  box-sizing: border-box;
+}
+
+/* Prevent horizontal scroll on the entire page. */
+html,
+body,
+#root {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+
+/* ----------------------------------------------------------------
+2. CSS CUSTOM PROPERTIES — TIMING TOKENS
+   Change values here to globally adjust animation speed / feel.
+     --sidebar-duration  : how long collapse/expand takes
+     --sidebar-ease      : easing for layout transitions (no bounce)
+     --ui-duration       : how long hover / colour transitions take
+     --ui-ease           : easing for hover feedback
+   ---------------------------------------------------------------- */
+.dashboard-shell {
+  /* Layout collapse animation — matched across shell + sidebar + children. */
+  --sidebar-width:    250px;
+  --sidebar-duration: 120ms;
+  --sidebar-ease:     linear;
+
+  /* Hover / interactive feedback — snappier than layout. */
+  --ui-duration: 150ms;
+  --ui-ease:     linear;
+}
+
+
+
+/* ----------------------------------------------------------------
+   3. SHELL LAYOUT
+   CSS Grid: [sidebar column] [content column]
+   Only the sidebar width changes on collapse; the grid transition
+   slides both columns simultaneously without JavaScript.
+   ---------------------------------------------------------------- */
+.dashboard-shell {
+  position: relative;
+  z-index: 20;
+  min-height: 100vh;
+  min-height: 100svh;
+  width: 100%;
+  max-width: 100vw;
+  display: grid;
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  color: var(--text-h);
+  text-align: left;
+  overflow-x: hidden;
+
+  /* Animate the sidebar column width when .sidebar-collapsed is toggled. */
+  transition: grid-template-columns var(--sidebar-duration) var(--sidebar-ease);
+
+  /* Hint to the browser to GPU-composite this element. */
+  will-change: grid-template-columns;
+}
+
+/* All buttons inside the shell inherit the body font. */
+.dashboard-shell button {
+  font-family: var(--body);
+}
+
+/* Collapsed rail: 88 px wide — only icon squares remain visible. */
+.dashboard-shell.sidebar-collapsed {
+  --sidebar-width: 88px;
+}
+
+
+/* ----------------------------------------------------------------
+   4. SIDEBAR — SURFACE
+   The left glass panel. Its width is driven by the shell's grid
+   column, so we only need to transition internal padding here.
+   overflow: hidden is critical — it clips inner content cleanly
+   during the collapse animation so nothing bleeds outside the rail.
+   ---------------------------------------------------------------- */
+.dashboard-sidebar {
+  position: relative;
+  /* Fills the full page height as the user scrolls. */
+  min-height: 100vh;
+  min-height: 100svh;
+  height: max-content;
+
+  /* Horizontal padding shrinks when collapsed. */
+  padding: 22px 16px;
+
+  background:     rgba(5, 11, 24, 0);
+  border-right:   1px solid rgba(255, 156, 26, 0.644);
+  backdrop-filter:         blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+
+  /* Clip inner content so nothing overflows during animation. */
+  overflow: hidden;
+
+  /* Sync padding change with the shell grid change. */
+  transition: padding var(--sidebar-duration) var(--sidebar-ease);
+}
+
+/* Tighter inline padding in collapsed mode so icons sit in the centre. */
+.dashboard-sidebar.is-collapsed {
+  padding-inline: 10px;
+}
+
+
+/* ----------------------------------------------------------------
+   5. SIDEBAR — INNER COLUMN
+   Flex column that stacks all sections: brand / nav / panel / logout.
+   min-height fills the screen so the logout can push to the bottom.
+   ---------------------------------------------------------------- */
+.sidebar-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+
+  /* Fill sidebar height so margin-top: auto on logout works. */
+  min-height: calc(100svh - 44px);
+
+  /* No visible overflow — pairs with sidebar overflow:hidden. */
+  overflow: hidden;
+}
+
+/* In collapsed mode, centre-align all direct children horizontally.
+   Items with explicit width:100% (nav, logout) still span the full rail. */
+.dashboard-sidebar.is-collapsed .sidebar-inner {
+  align-items: center;
+}
+
+
+/* ----------------------------------------------------------------
+   6. SIDEBAR — COLLAPSE TOGGLE BUTTON
+   Sits at the very top of the sidebar rail.
+   In expanded mode it is right-aligned (margin-left: auto).
+   In collapsed mode it is centre-aligned (margin-inline: auto).
+   ---------------------------------------------------------------- */
+.sidebar-collapse-btn {
+  /* Push to right edge in expanded mode. */
+  margin-left: auto;
+
+  /* Fixed size — never stretches or shrinks. */
+  width:        40px;
+  height:       40px;
+  flex-shrink:  0;
+
+  border-radius:   8px;
+  display:         grid;
+  place-items:     center;
+  color:           var(--amber-light);
+  background:      rgba(255, 154, 26, 0.10);
+  border:          1px solid rgba(255, 154, 26, 0.22);
+  cursor:          pointer;
+
+  transition:
+    background    var(--ui-duration) var(--ui-ease),
+    border-color  var(--ui-duration) var(--ui-ease),
+    transform     var(--ui-duration) var(--ui-ease);
+}
+
+.sidebar-collapse-btn:hover {
+  background:   rgba(255, 154, 26, 0.20);
+  border-color: rgba(255, 154, 26, 0.42);
+  transform:    translateY(-1px);
+}
+
+/* Centre the button when the rail is narrow. */
+.dashboard-sidebar.is-collapsed .sidebar-collapse-btn {
+  margin-inline: auto;
+  margin-left:   auto; /* overrides the base margin-left: auto fallback */
+}
+
+/* Pure-CSS chevron arrow — no icon library required. */
+.collapse-icon {
+  width:       10px;
+  height:      10px;
+  border-top:  2px solid currentColor;
+  border-left: 2px solid currentColor;
+
+  /* Default: points left (← = expanded, indicates collapse). */
+  transform: rotate(-45deg);
+
+  /* Rotate in sync with the sidebar layout transition. */
+  transition: transform var(--sidebar-duration) var(--sidebar-ease);
+}
+
+/* Rotated 180°: points right (→ = collapsed, indicates expand). */
+.dashboard-sidebar.is-collapsed .collapse-icon {
+  transform: rotate(135deg);
+}
+
+
+/* ----------------------------------------------------------------
+   7. SIDEBAR — BRAND BLOCK
+   Shows logo circle + "FleetStat" text when expanded.
+   Collapses to the logo circle only when the rail is narrow.
+   ---------------------------------------------------------------- */
+.sidebar-brand {
+  display:         flex;
+  align-items:     center;
+  gap:             12px;
+  border-radius:   10px;
+
+  /* Glass surface (also listed in section 11 shared group). */
+  background:      rgba(8, 15, 30, 0.62);
+  border:          1px solid rgba(255, 154, 26, 0.16);
+  box-shadow:      inset 0 1px 0 rgba(255, 255, 255, 0.07),
+                   0 16px 42px rgba(0, 0, 0, 0.18);
+  backdrop-filter:         blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  /* Clip text so it doesn't overflow during collapse. */
+  overflow: hidden;
+
+  transition:
+    padding         var(--sidebar-duration) var(--sidebar-ease),
+    gap             var(--sidebar-duration) var(--sidebar-ease);
+}
+
+/* In collapsed mode: fill the narrow rail width and centre the mark. */
+.dashboard-sidebar.is-collapsed .sidebar-brand {
+  width:            100%;
+  justify-content:  center;
+  padding:          4px;
+  gap:              0;
+  border: #06101e00;
+  box-shadow: #06101e00;
+  
+}
+
+/* Circular logo badge — flex: 0 0 42px prevents any shrinking. */
+.brand-mark {
+  width:          42px;
+  height:         42px;
+  border-radius:  100%;
+  display:        grid;
+  place-items:    center;
+
+  /* Never shrink — size stays exact during collapse animation. */
+  flex:           0 0 42px;
+
+  color:          #06101e;
+  background:     linear-gradient(135deg, var(--amber-light), var(--amber));
+  font-family:    var(--heading);
+  font-weight:    800;
+  letter-spacing: 0;
+  box-shadow:     0 0 24px rgba(255, 154, 26, 0.32);
+
+  /* Playful spring-scale + rotate on hover. */
+  transition:
+    transform  0.30s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.30s ease;
+}
+
+.sidebar-brand:hover .brand-mark {
+  transform:  scale(1.07) rotate(6deg);
+  box-shadow: 0 0 36px rgba(255, 154, 26, 0.52);
+}
+
+/* Text container: "FleetStat" + "Control center".
+   Slides and fades out as the sidebar narrows. */
+.sidebar-copy {
+  min-width:    0;
+  overflow:     hidden;
+  opacity:      1;
+  max-width:    150px;
+  transform:    translateX(0);
+
+  transition:
+    opacity   0.20s ease,
+    max-width var(--sidebar-duration) var(--sidebar-ease),
+    transform 0.24s var(--sidebar-ease);
+}
+
+/* Collapsed: slide left + fade; pointer-events off so it's not clickable. */
+.dashboard-sidebar.is-collapsed .sidebar-copy {
+  max-width:      0;
+  opacity:        0;
+  transform:      translateX(-10px);
+  pointer-events: none;
+}
+
+.sidebar-brand strong {
+  display:        block;
+  font-family:    var(--heading);
+  font-size:      18px;
+  letter-spacing: 0;
+}
+
+.sidebar-brand small {
+  display:        block;
+  margin-top:     2px;
+  color:          var(--text-sub);
+  font-size:      12px;
+  text-transform: uppercase;
+}
+
+
+/* ----------------------------------------------------------------
+   8. SIDEBAR — NAVIGATION ITEMS
+   Each button has three grid columns: [icon] [label] [badge].
+   Collapsed: collapses to a single centred column [icon].
+   ---------------------------------------------------------------- */
+.sidebar-nav {
+  display: grid;
+  gap:     6px;
+  /* Always fill the full sidebar width, even in collapsed mode. */
+  width:   100%;
+}
+
+/* Shared border/colour transitions for interactive children. */
+.sidebar-nav button,
+.quick-actions button,
+.data-table button {
+  border:  1px solid transparent;
+  cursor:  pointer;
+  color:   rgba(255, 255, 255, 0.78);
+
+  transition:
+    transform    var(--ui-duration) var(--ui-ease),
+    border-color var(--ui-duration) var(--ui-ease),
+    background   var(--ui-duration) var(--ui-ease),
+    color        var(--ui-duration) var(--ui-ease);
+}
+
+/* Nav button — three-column icon/label/badge layout. */
+.sidebar-nav button {
+  min-height:           46px;
+  border-radius:        8px;
+  padding:              0 10px 0 14px;
+  background:           transparent;
+  display:              grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items:          center;
+  gap:                  8px;
+  text-align:           left;
+  overflow:             hidden;
+  width:                100%;
+
+  /* Layout columns + padding change is synced with sidebar width change. */
+  transition:
+    grid-template-columns var(--sidebar-duration) var(--sidebar-ease),
+    padding               var(--sidebar-duration) var(--sidebar-ease),
+    transform             var(--ui-duration)       var(--ui-ease),
+    border-color          var(--ui-duration)       var(--ui-ease),
+    background            var(--ui-duration)       var(--ui-ease),
+    color                 var(--ui-duration)       var(--ui-ease);
+}
+
+/* Collapsed: single centred column — only the icon shows. */
+.dashboard-sidebar.is-collapsed .sidebar-nav button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;       /* Ensures the button takes full sidebar width */
+    padding: 8px;
+    min-height: 9px;
+}
+
+
+/* Hover and active states for nav buttons. */
+.sidebar-nav button:hover,
+.sidebar-nav button.active {
+  color:        #ffffff;
+  background:   rgba(255, 154, 26, 0.12);
+  border-color: rgba(255, 154, 26, 0.28);
+}
+
+/* Coloured icon tile inside each nav button. */
+.nav-icon {
+  width:           28px;
+  height:          28px;
+  border-radius:   5px;
+  display:         grid;
+  place-items:     center;
+  flex-shrink:     0;
+  color:           #07101d;
+  background:      rgba(255, 154, 26, 0.82);
+  font-size:       12px;
+  font-weight:     900;
+
+  /* Border-radius morphs to a circle; scale lifts on hover. */
+  transition:
+    transform     0.28s var(--sidebar-ease),
+    border-radius 0.28s var(--sidebar-ease),
+    background    var(--ui-duration) var(--ui-ease);
+}
+
+/* Icon becomes a circle pill in collapsed rail for a cleaner look. */
+.dashboard-sidebar.is-collapsed .nav-icon {
+  border-radius: 50%;
+}
+
+/* Scale + brighten icon when button is hovered or active. */
+.sidebar-nav button:hover .nav-icon{
+  transform: scale(2);
+
+}
+.sidebar-nav button.active .nav-icon {
+  transform:  scale(1.5);
+  background: var(--amber);
+}
+
+/* Nav label text — slides and fades out as sidebar collapses. */
+.nav-label {
+  min-width:     0;
+  max-width:     140px;
+  opacity:       1;
+  transform:     translateX(0);
+  overflow:      hidden;
+  text-overflow: ellipsis;
+  white-space:   nowrap;
+
+  transition:
+    opacity   0.18s ease,
+    max-width var(--sidebar-duration) var(--sidebar-ease),
+    transform 0.20s var(--sidebar-ease);
+}
+
+.dashboard-sidebar.is-collapsed .nav-label {
+  max-width:      0;
+  opacity:        0;
+  transform:      translateX(-8px);
+  pointer-events: none;
+}
+
+/* Status badge text (e.g. "Live", "Soon"). */
+.sidebar-nav small {
+  color:          rgba(255, 189, 90, 0.76);
+  font-size:      10px;
+  text-transform: uppercase;
+  white-space:    nowrap;
+  max-width:      40px;
+  overflow:       hidden;
+
+  transition:
+    opacity   0.16s ease,
+    max-width var(--sidebar-duration) var(--sidebar-ease);
+}
+
+.dashboard-sidebar.is-collapsed .sidebar-nav small {
+  max-width: 0;
+  opacity:   0;
+}
+
+
+/* ----------------------------------------------------------------
+   9. SIDEBAR — INFO PANEL (future modules note)
+   Sits between the nav and the logout button.
+   Collapses to zero height when the rail is narrow.
+   ---------------------------------------------------------------- */
+.sidebar-panel {
+  /* margin-top: auto would push it down; instead gap handles spacing. */
+  border-radius: 8px;
+  padding:       14px;
+  background:    rgba(255, 154, 26, 0.08);
+  border:        1px solid rgba(255, 154, 26, 0.17);
+  overflow:      hidden;
+
+  /* Animate height, opacity, and a vertical nudge simultaneously. */
+  max-height: 200px;
+  opacity:    1;
+  transform:  translateY(0);
+
+  transition:
+    max-height   var(--sidebar-duration) var(--sidebar-ease),
+    padding      var(--sidebar-duration) var(--sidebar-ease),
+    opacity      0.20s ease,
+    border-color var(--ui-duration) ease,
+    background   var(--ui-duration) ease,
+    transform    0.22s var(--sidebar-ease);
+}
+
+.sidebar-panel:hover {
+  background:   rgba(255, 156, 26, 0);
+  border-color: rgba(255, 154, 26, 0.32);
+}
+
+/* Collapsed: height animates to 0 and content disappears. */
+.dashboard-sidebar.is-collapsed .sidebar-panel {
+  max-height:     0;
+  padding-block:  0;
+  border-color:   transparent;
+  opacity:        0;
+  transform:      translateY(-6px);
+  pointer-events: none;
+}
+
+.sidebar-panel span {
+  display:        block;
+  color:          var(--amber-light);
+  font-size:      12px;
+  font-weight:    700;
+  text-transform: uppercase;
+}
+
+.sidebar-panel p {
+  margin-top:  8px;
+  color:       rgba(255, 255, 255, 0.62);
+  font-size:   13px;
+  line-height: 1.55;
+}
+
+
+/* ----------------------------------------------------------------
+  10. SIDEBAR — LOGOUT BUTTON (footer)
+   Anchored at the bottom via margin-top: auto.
+   In expanded mode: [icon] [label].
+   In collapsed mode: single centred [icon] only.
+   ---------------------------------------------------------------- */
+.sidebar-logout {
+  /* Push to the very bottom of the sidebar-inner column. */
+  margin-top: auto;
+
+  min-height:   44px;
+  width:        100%;        /* always fills the full rail width */
+  border-radius: 8px;
+  border:        1px solid transparent;
+  padding:       0 12px;
+
+  display:       grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items:   center;
+  justify-items: start;
+  gap:           8px;
+
+  background: rgba(239, 68, 68, 0.74);
+
+  /* Layout + hover transitions both in sync. */
+  transition:
+    grid-template-columns var(--sidebar-duration) var(--sidebar-ease),
+    padding               var(--sidebar-duration) var(--sidebar-ease),
+    transform             var(--ui-duration)       var(--ui-ease),
+    background            var(--ui-duration)       var(--ui-ease);
+}
+
+.sidebar-logout:hover {
+  border-color: rgb(0, 0, 0);
+  transform:  translateY(-2px);
+}
+
+/* Collapsed: single centred column — icon only. */
+.dashboard-sidebar.is-collapsed .sidebar-logout {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;       /* Ensures the button takes full sidebar width */
+    padding: 8px;
+    min-height: 9px;
+}
+
+
+/* Circular icon inside the logout button. */
+.logout-icon {
+  width:         28px;
+  height:        28px;
+  border-radius: 50%;
+  display:       grid;
+  place-items:   center;
+  flex-shrink:   0;
+  color:         #000000;
+  background:    rgba(255, 255, 255, 0.18);
+  font-size:     12px;
+  font-weight:   900;
+}
+
+/* Logout label text — slides and fades out when collapsed. */
+.logout-label {
+  min-width:   0;
+  max-width:   90px;
+  opacity:     1;
+  overflow:    hidden;
+  white-space: nowrap;
+
+  transition:
+    opacity   0.18s ease,
+    max-width var(--sidebar-duration) var(--sidebar-ease),
+    transform 0.20s var(--sidebar-ease);
+}
+
+.dashboard-sidebar.is-collapsed .logout-label {
+  max-width:      0;
+  opacity:        0;
+  transform:      translateX(-6px);
+  pointer-events: none;
+}
+
+
+/* ----------------------------------------------------------------
+  11. SHARED GLASS SURFACE
+   Applied to the brand block, header, metric cards, analytics
+   panels, and the loading/error state panel.
+   Change the background or border here to retheme all glass.
+   ---------------------------------------------------------------- */
+.sidebar-brand,
+.dashboard-header,
+.metric-card,
+.analytics-panel,
+.dashboard-state {
+  background:      rgba(8, 15, 30, 0);
+  border:          1px solid rgba(255, 154, 26, 0.16);
+  box-shadow:      inset 0 1px 0 rgba(255, 255, 255, 0.07),
+                   0 16px 42px rgba(0, 0, 0, 0.18);
+  backdrop-filter:         blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+
+/* ----------------------------------------------------------------
+  12. MAIN CONTENT AREA
+   Sits in the right grid column; never overflows its track.
+   ---------------------------------------------------------------- */
+.dashboard-content {
+  min-width: 0;       /* required for grid children */
+  width:     100%;
+  max-width: 100%;
+  overflow:  hidden;
+  padding:   22px;
+}
+
+
+/* ----------------------------------------------------------------
+  13. DASHBOARD HEADER
+   Horizontal bar: [hamburger?] [title] [actions].
+   ---------------------------------------------------------------- */
+.dashboard-header {
+  min-width:       0;
+  max-width:       100%;
+  border-radius:   10px;
+  padding:         20px 24px;
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  gap:             18px;
+}
+
+/* Title column: eyebrow + h1 + description paragraph. */
+.dashboard-title {
+  min-width: 0;
+  flex:      1 1 0;
+}
+
+/* Right-side slot for range tabs and any future controls. */
+.header-actions {
+  min-width:  0;
+  display:    flex;
+  align-items: center;
+  gap:        12px;
+  flex-shrink: 0;
+}
+
+
+/* ----------------------------------------------------------------
+  14. EYEBROW LABEL
+   Small uppercase text above the main heading.
+   The ::before pseudo-element is a pulsing live-dot.
+   ---------------------------------------------------------------- */
+.eyebrow {
+  display:        inline-flex;
+  align-items:    center;
+  gap:            8px;
+  color:          var(--amber-light);
+  font-size:      11px;
+  font-weight:    700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+
+
+/* Main gradient heading. Edit the gradient stops to retheme. */
+.dashboard-title h1 {
+  margin:         5px 0 4px;
+  font-family:    var(--heading);
+  font-size:      clamp(26px, 4vw, 42px);
+  line-height:    1.06;
+  letter-spacing: -0.5px;
+  background:     linear-gradient(135deg, #ffffff 20%, var(--amber-light) 100%);
+  -webkit-background-clip: text;
+  background-clip:         text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Subtitle / description below the heading. */
+.dashboard-title p {
+  color:       rgba(255, 255, 255, 0.54);
+  font-size:   14px;
+  line-height: 1.5;
+}
+
+
+/* ----------------------------------------------------------------
+  15. RANGE & METRIC SEGMENTED TABS
+   Pill-shaped containers for time-range and metric-focus buttons.
+   ---------------------------------------------------------------- */
+.range-tabs,
+.metric-switch {
+  display:          inline-grid;
+  grid-auto-flow:   column;
+  max-width:        100%;
+  gap:              4px;
+  padding:          4px;
+  border-radius:    8px;
+  background:       rgba(255, 255, 255, 0.06);
+  border:           1px solid rgba(255, 255, 255, 0.09);
+}
+
+/* Remove default browser borders for these controls. */
+.range-tabs button,
+.metric-switch button,
+.logout-btn,
+.primary-action,
+.menu-toggle {
+  border:  0;
+  cursor:  pointer;
+}
+
+/* Inactive tab. */
+.range-tabs button,
+.metric-switch button {
+  min-width:    36px;
+  height:       32px;
+  padding:      0 8px;
+  border-radius: 6px;
+  background:   transparent;
+  color:        rgba(255, 255, 255, 0.60);
+  font-size:    13px;
+  font-weight:  700;
+ 
+
+  /* Colour + fill fade when switching tabs. */
+  transition:
+    background var(--ui-duration) var(--ui-ease),
+    color      var(--ui-duration) var(--ui-ease);
+}
+
+.range-tabs button:hover,
+.metric-switch button:hover {
+  color:      #ffffff;
+  background: rgba(255, 255, 255, 0.09);
+   transform: scale(1.2);
+}
+
+/* Active tab — amber fill, dark text. */
+.range-tabs button.active,
+.metric-switch button.active {
+  color:      #07101d;
+  background: var(--amber);
+   transform: scale(1.1);
+}
+
+/* Slightly lighter amber on hover when already active. */
+.range-tabs button.active:hover,
+.metric-switch button.active:hover {
+  background: var(--amber-light);
+}
+
+
+/* ----------------------------------------------------------------
+  16. STANDALONE BUTTONS
+   logout-btn  — red, inside the header on some layouts
+   primary-action — amber gradient, used in the error state
+   menu-toggle — hamburger, visible on mobile only
+   ---------------------------------------------------------------- */
+.logout-btn,
+.primary-action {
+  min-height:    40px;
+  border-radius: 8px;
+  padding:       0 16px;
+  font-weight:   800;
+
+  transition:
+    background var(--ui-duration) var(--ui-ease),
+    transform  var(--ui-duration) var(--ui-ease),
+    box-shadow var(--ui-duration) var(--ui-ease);
+}
+
+.logout-btn {
+  color:      #00000096;
+  background: linear-gradient(in oklab to bottom right, #da8a12, #c82121);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.613);
+}
+
+.logout-btn:hover {
+  transform:  translateY(-4px);
+}
+
+/* Primary amber CTA — used in error / loading states. */
+.primary-action {
+  color:      #06101e;
+  background: linear-gradient(135deg, var(--amber-light), var(--amber));
+  box-shadow: 0 8px 20px rgba(255, 154, 26, 0.14);
+}
+
+.primary-action:hover {
+  transform:  translateY(-1px);
+  box-shadow: 0 12px 28px rgba(255, 154, 26, 0.28);
+}
+
+/* Hamburger — hidden on desktop, shown on tablet/mobile. */
+.menu-toggle {
+  display:       none;
+  width:         42px;
+  height:        42px;
+  border-radius: 8px;
+  padding:       10px;
+  flex-shrink:   0;
+  background:    rgba(255, 154, 26, 0.12);
+  border:        1px solid rgba(255, 154, 26, 0.24);
+  transition:    background var(--ui-duration) var(--ui-ease);
+}
+
+.menu-toggle:hover {
+  background: rgba(255, 154, 26, 0.22);
+}
+
+/* Three hamburger lines. */
+.menu-toggle span {
+  display:       block;
+  height:        2px;
+  margin:        4px 0;
+  border-radius: 2px;
+  background:    var(--amber-light);
+}
+
+
+/* ----------------------------------------------------------------
+  17. KPI METRIC CARDS
+   Four interactive cards at the top of the dashboard.
+   Each card lifts on hover with a tone-specific border glow.
+   ---------------------------------------------------------------- */
+.kpi-grid {
+  min-width: 0;
+  max-width: 100%;
+  display:   grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap:        14px;
+  margin-top: 16px;
+}
+
+.metric-card {
+  min-width:      0;
+  min-height:     154px;
+  border-radius:  10px;
+  padding:        18px;
+  display:        flex;
+  flex-direction: column;
+  justify-content: space-between;
+  outline:        none;
+  cursor:         pointer;
+  box-shadow:     0 4px 20px rgba(0, 0, 0, 0.15);
+
+  /* Smooth lift, border glow, and shadow on hover/focus/selected. */
+  transition:
+    transform        0.26s var(--ui-ease),
+    border-color     0.26s var(--ui-ease),
+    background-color 0.26s var(--ui-ease),
+    box-shadow       0.26s var(--ui-ease);
+}
+
+/* All cards lift the same amount when interacted with. */
+.metric-card:hover,
+.metric-card:focus,
+.metric-card.selected {
+  transform:        translateY(-4px);
+  background-color: rgba(12, 22, 44, 0.82);
+}
+
+/* Tone-specific glow colours.
+   Edit the rgba() border and shadow values to retheme each card. */
+.metric-card.tone-gold:hover,
+.metric-card.tone-gold:focus,
+.metric-card.tone-gold.selected {
+  border-color: rgba(255, 154, 26, 0.50);
+  box-shadow:   0 14px 32px rgba(255, 154, 26, 0.11),
+                0  4px 14px rgba(0, 0, 0, 0.22);
+}
+
+.metric-card.tone-green:hover,
+.metric-card.tone-green:focus,
+.metric-card.tone-green.selected {
+  border-color: rgba(34, 197, 94, 0.50);
+  box-shadow:   0 14px 32px rgba(34, 197, 94, 0.11),
+                0  4px 14px rgba(0, 0, 0, 0.22);
+}
+
+.metric-card.tone-blue:hover,
+.metric-card.tone-blue:focus,
+.metric-card.tone-blue.selected {
+  border-color: rgba(22, 200, 200, 0.50);
+  box-shadow:   0 14px 32px rgba(22, 200, 200, 0.11),
+                0  4px 14px rgba(0, 0, 0, 0.22);
+}
+
+.metric-card.tone-red:hover,
+.metric-card.tone-red:focus,
+.metric-card.tone-red.selected {
+  border-color: rgba(239, 68, 68, 0.50);
+  box-shadow:   0 14px 32px rgba(239, 68, 68, 0.11),
+                0  4px 14px rgba(0, 0, 0, 0.22);
+}
+
+/* Inline elements inside cards (span = label, small = sub-label). */
+.metric-card span,
+.metric-card small {
+  display: block;
+}
+
+/* Label row — small uppercase text at the top of the card. */
+.metric-card span {
+  color:          rgba(255, 255, 255, 0.55);
+  font-size:      12px;
+  font-weight:    700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* Large animated number — CountUpValue renders here. */
+.metric-card strong {
+  display:         block;
+  margin-top:      10px;
+  color:           #ffffff;
+  font-family:     var(--heading);
+  font-size:       clamp(22px, 2.4vw, 32px);
+  line-height:     1;
+  letter-spacing:  -0.5px;
+  overflow-wrap:   anywhere;
+}
+
+/* Sub-label below the number. */
+.metric-card small {
+  margin-top: 8px;
+  color:      rgba(255, 255, 255, 0.52);
+  font-size:  13px;
+}
+
+/* Progress track (bottom of the card). */
+.metric-progress {
+  height:        5px;
+  border-radius: 999px;
+  background:    rgba(255, 255, 255, 0.08);
+  overflow:      hidden;
+  margin-top:    8px;
+}
+
+/* Progress fill — animates its width on page load. */
+.metric-progress span {
+  display:       block;
+  height:        100%;
+  border-radius: inherit;
+  /* Width change animates via a long, smooth spring curve. */
+  transition:    width 1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Tone colours for the progress fill bar. */
+.tone-gold  .metric-progress span { background: var(--amber); }
+.tone-green .metric-progress span { background: #22c55e; }
+.tone-blue  .metric-progress span { background: #16c8c8; }
+.tone-red   .metric-progress span { background: #ef4444; }
+
+
+/* ----------------------------------------------------------------
+  18. DASHBOARD ANALYTICS GRID
+   Left column: wide area/bar chart panels.
+   Right column: stacked utilization, pie, table, actions.
+   ---------------------------------------------------------------- */
+.dashboard-grid {
+  min-width: 0;
+  max-width: 100%;
+  display:   grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+  gap:        14px;
+  margin-top: 14px;
+}
+
+
+/* ----------------------------------------------------------------
+  19. ANALYTICS PANELS
+   Shared glass card for every chart, table, and action section.
+   Hover brightens the border and deepens the shadow.
+   ---------------------------------------------------------------- */
+.analytics-panel {
+  min-width:     0;
+  border-radius: 10px;
+  padding:       18px;
+
+  transition:
+    border-color var(--ui-duration) var(--ui-ease),
+    box-shadow   var(--ui-duration) var(--ui-ease);
+}
+
+.analytics-panel:hover {
+  border-color: rgba(255, 154, 26, 0.28);
+  box-shadow:   inset 0 1px 0 rgba(255, 255, 255, 0.10),
+                0 24px 52px rgba(0, 0, 0, 0.26);
+}
+
+/* Both the revenue chart and the data table span one column each. */
+.revenue-panel,
+.table-panel {
+  grid-column: span 1;
+}
+
+
+/* ----------------------------------------------------------------
+  20. PANEL HEADING ROW
+   Each panel starts with this row: eyebrow + h2 on the left,
+   optional pill or metric-switch buttons on the right.
+   ---------------------------------------------------------------- */
+.panel-heading {
+  min-width:       0;
+  display:         flex;
+  align-items:     flex-start;
+  justify-content: space-between;
+  gap:             12px;
+  margin-bottom:   16px;
+}
+
+.panel-heading h2 {
+  margin:         4px 0 0;
+  font-family:    var(--heading);
+  font-size:      20px;
+  letter-spacing: -0.2px;
+}
+
+/* Small info pill, e.g. "42 trips". */
+.panel-pill {
+  border-radius: 999px;
+  padding:       6px 12px;
+  color:         var(--amber-light);
+  background:    rgba(255, 154, 26, 0.10);
+  border:        1px solid rgba(255, 154, 26, 0.20);
+  font-size:     12px;
+  font-weight:   800;
+  white-space:   nowrap;
+  align-self:    flex-start;
+}
+
+
+/* ----------------------------------------------------------------
+  21. CHART WRAPPERS
+   Fixed heights prevent Recharts from thrashing the layout on
+   every render cycle. Adjust the height values here if needed.
+   ---------------------------------------------------------------- */
+.chart-wrap {
+  min-width:  0;
+  max-width:  100%;
+  overflow:   hidden;
+  width:      100%;
+  height:     230px;
+  min-height: 230px;
+}
+
+/* Taller wrapper for the main revenue area chart. */
+.chart-wrap.tall {
+  height:     310px;
+  min-height: 310px;
+}
+
+/* Recharts SVG axis labels. Change fill to retheme. */
+.recharts-text {
+  fill:      rgba(255, 255, 255, 0.50);
+  font-size: 12px;
+}
+
+
+/* ----------------------------------------------------------------
+  22. TRUCK UTILIZATION METER
+   Conic-gradient ring + stat rows side by side.
+   --value is set as an inline style by JSX.
+   ---------------------------------------------------------------- */
+.utilization-meter {
+  display:               grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap:                   18px;
+  align-items:           center;
+}
+
+/* The dial ring itself. */
+.meter-ring {
+  --value: 0deg;
+
+  width:          150px;
+  aspect-ratio:   1;
+  border-radius:  50%;
+  display:        grid;
+  place-items:    center;
+  text-align:     center;
+
+  /* Inner dark circle cut out from the conic gradient. */
+  background:
+    radial-gradient(circle at center, rgba(8, 15, 30, 0.95) 0 58%, transparent 59%),
+    conic-gradient(var(--amber) var(--value), rgba(255, 255, 255, 0.08) 0);
+
+  box-shadow: 0 0 28px rgba(255, 154, 26, 0.16);
+
+  /* Spring scale on hover — the cubic-bezier gives a subtle bounce. */
+  transition:
+    transform  0.30s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.30s ease;
+}
+
+/* Gentle grow + glow when the meter panel is hovered. */
+.utilization-meter:hover .meter-ring {
+  transform:  scale(1.04);
+  box-shadow: 0 0 42px rgba(255, 154, 26, 0.30);
+}
+
+/* Both text nodes share the same grid cell (stacked). */
+.meter-ring strong,
+.meter-ring span {
+  grid-area: 1 / 1;
+}
+
+/* Large percentage number. */
+.meter-ring strong {
+  margin-top:  -14px;
+  font-family: var(--heading);
+  font-size:   32px;
+}
+
+/* "ACTIVE" label below the number. */
+.meter-ring span {
+  margin-top:     36px;
+  color:          rgba(255, 255, 255, 0.50);
+  font-size:      11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* Stat rows to the right of the ring. */
+.meter-details {
+  display: grid;
+  gap:     8px;
+}
+
+.meter-details p {
+  padding:       10px 12px;
+  border-radius: 8px;
+  color:         rgba(255, 255, 255, 0.62);
+  background:    rgba(255, 255, 255, 0.05);
+  font-size:     14px;
+}
+
+.meter-details strong {
+  color: #ffffff;
+}
+
+
+/* ----------------------------------------------------------------
+  23. LEGEND PILLS
+   Coloured dot + status label for the pie chart.
+   ---------------------------------------------------------------- */
+.legend-list {
+  min-width:  0;
+  display:    flex;
+  flex-wrap:  wrap;
+  gap:        6px;
+  margin-top: 10px;
+}
+
+.legend-list span {
+  display:       inline-flex;
+  align-items:   center;
+  gap:           6px;
+  min-height:    26px;
+  border-radius: 999px;
+  padding:       0 10px;
+  color:         rgba(255, 255, 255, 0.72);
+  background:    rgba(255, 255, 255, 0.06);
+  font-size:     12px;
+
+  transition:
+    transform  0.18s var(--ui-ease),
+    background var(--ui-duration) var(--ui-ease);
+}
+
+.legend-list span:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform:  translateY(-1px);
+}
+
+/* Colour dot inside each pill. Set via inline background style in JSX. */
+.legend-list i {
+  width:         8px;
+  height:        8px;
+  border-radius: 50%;
+  flex-shrink:   0;
+}
+
+
+/* ----------------------------------------------------------------
+  24. OPERATIONAL SUMMARY TABLE
+   Clickable button rows designed for future drill-down pages.
+   ---------------------------------------------------------------- */
+.data-table {
+  display: grid;
+  gap:     8px;
+}
+
+.data-table button {
+  min-width:      0;
+  min-height:     62px;
+  border-radius:  8px;
+  padding:        11px 14px;
+  background:     rgba(255, 255, 255, 0.045);
+  display:        grid;
+  /* Left side: label + sub-label.  Right side: big number. */
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items:    center;
+  gap:            4px 12px;
+  text-align:     left;
+}
+
+.data-table button:hover {
+  transform:    translateY(-2px);
+  border-color: rgba(255, 154, 26, 0.28);
+  background:   rgba(255, 154, 26, 0.09);
+}
+
+/* Row label (left column, first row). */
+.data-table span {
+  color:       rgba(255, 255, 255, 0.72);
+  font-weight: 700;
+  font-size:   14px;
+}
+
+/* Large count (right column, spans both rows). */
+.data-table strong {
+  color:       var(--amber-light);
+  font-family: var(--heading);
+  font-size:   22px;
+  line-height: 1;
+}
+
+/* Sub-label below the row label (spans both columns). */
+.data-table small {
+  grid-column: 1 / -1;
+  color:       rgba(255, 255, 255, 0.42);
+  font-size:   12px;
+}
+
+
+/* ----------------------------------------------------------------
+  25. QUICK-ACTIONS GRID
+   2-column grid of placeholder action buttons.
+   Replace onClick handlers with router.push() when pages exist.
+   ---------------------------------------------------------------- */
+.quick-actions {
+  display:               grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap:                   8px;
+}
+
+.quick-actions button {
+  min-width:     0;
+  min-height:    46px;
+  border-radius: 8px;
+  padding:       0 10px;
+  background:    rgba(255, 255, 255, 0.05);
+  color:         rgba(255, 255, 255, 0.76);
+  font-weight:   700;
+  font-size:     13px;
+}
+
+.quick-actions button:hover {
+  transform:    translateY(-2px);
+  border-color: rgba(255, 154, 26, 0.28);
+  background:   rgba(255, 154, 26, 0.09);
+}
+
+
+/* ----------------------------------------------------------------
+  26. LOADING / ERROR STATE
+   Full-screen centred panel shown while data loads or on API error.
+   ---------------------------------------------------------------- */
+.dashboard-state {
+  width:         min(520px, calc(100% - 32px));
+  margin:        auto;
+  border-radius: 10px;
+  padding:       40px 32px;
+  text-align:    center;
+}
+
+.dashboard-state h1 {
+  margin:         16px 0 8px;
+  font-size:      32px;
+  letter-spacing: -0.5px;
+}
+
+.dashboard-state p {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+/* Shared base for the icon and spinner. */
+.state-icon,
+.loading-ring {
+  width:         52px;
+  height:        52px;
+  margin:        0 auto;
+  border-radius: 50%;
+  display:       grid;
+  place-items:   center;
+}
+
+/* Red "!" icon for the error state. */
+.state-icon {
+  color:       #ffffff;
+  background:  rgba(239, 68, 68, 0.82);
+  font-weight: 900;
+  font-size:   22px;
+}
+
+/* Spinning amber ring for the loading state. */
+.loading-ring {
+  border:           3px solid rgba(255, 154, 26, 0.16);
+  border-top-color: var(--amber);
+  animation:        spin 0.8s linear infinite;
+}
+
+/* spin keyframes — may also exist in global CSS; safe to define here. */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+
+/* ================================================================
+  27. RESPONSIVE — 1180 px (medium screens)
+   KPI grid halves to 2 columns; charts stack to single column.
+   ================================================================ */
+@media (max-width: 1180px) {
+  .dashboard-shell {
+    --sidebar-width: 230px;
+  }
+
+  .kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ================================================================
+  28. RESPONSIVE — 860 px (tablet / mobile)
+   Sidebar becomes a fixed slide-in drawer.
+   The main shell switches from grid to block.
+   The hamburger button appears.
+   ================================================================ */
+@media (max-width: 860px) {
+
+  /* Switch from CSS Grid to block so the fixed sidebar can overlay. */
+  .dashboard-shell,
+  .dashboard-shell.sidebar-collapsed {
+    display:   block;
+    width:     100%;
+    max-width: 100vw;
+  }
+
+  /* Sidebar is now a fixed overlay drawer, hidden off-screen by default. */
+  .dashboard-sidebar {
+    position:   fixed;
+    z-index:    40;
+    inset:      0 auto 0 0;
+    width:      min(310px, 86vw);
+    height:     100svh;
+    min-height: 100svh;
+    overflow:   hidden;
+
+    /* Start position: fully off-screen to the left. */
+    transform:  translateX(-105%);
+    transition: transform 0.28s var(--ui-ease);
+  }
+
+  /* Sidebar inner on mobile: scrollable so nav fits on small screens. */
+  .sidebar-inner {
+    min-height:  0;
+    max-height:  calc(100svh - 44px);
+    overflow-y:  auto;
+    overflow-x:  hidden;
+  }
+
+  /* Hide the desktop collapse toggle — not needed on mobile. */
+  .sidebar-collapse-btn {
+    display: none;
+  }
+
+  /* On mobile a "collapsed" sidebar is still a full-width drawer.
+     Override all collapsed-rail-specific centering rules below. */
+
+  .dashboard-sidebar.is-collapsed .sidebar-inner {
+    align-items: stretch;
+  }
+
+  .dashboard-sidebar.is-collapsed .sidebar-brand {
+    justify-content: flex-start;
+    padding:         8px 12px;
+    gap:             12px;
+  }
+
+  /* Restore all hidden elements inside the mobile drawer. */
+  .dashboard-sidebar.is-collapsed .sidebar-copy,
+  .dashboard-sidebar.is-collapsed .nav-label,
+  .dashboard-sidebar.is-collapsed .sidebar-nav small {
+    display:        block;
+    max-width:      none;
+    opacity:        1;
+    transform:      none;
+    pointer-events: auto;
+  }
+
+  .dashboard-sidebar.is-collapsed .sidebar-panel {
+    display:     block;
+    max-height:  200px;
+    padding:     14px;
+    border-color: rgba(255, 154, 26, 0.17);
+    opacity:     1;
+    transform:   none;
+    pointer-events: auto;
+  }
+
+  .dashboard-sidebar.is-collapsed .sidebar-nav button {
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    justify-items:         stretch;
+    padding:               0 10px 0 14px;
+  }
+
+  .dashboard-sidebar.is-collapsed .nav-label {
+    max-width: 140px;
+  }
+
+  .dashboard-sidebar.is-collapsed .sidebar-logout {
+    grid-template-columns: 28px minmax(0, 1fr);
+    justify-items:         start;
+    padding:               0 14px;
+  }
+
+  .dashboard-sidebar.is-collapsed .logout-label {
+    max-width:      90px;
+    opacity:        1;
+    transform:      none;
+    pointer-events: auto;
+  }
+
+  /* .is-open slides the drawer into view. */
+  .dashboard-sidebar.is-open {
+    transform: translateX(0);
+    box-shadow: 18px 0 46px rgba(0, 0, 0, 0.38);
+  }
+
+  /* Main content area on tablet. */
+  .dashboard-content {
+    width:     100%;
+    max-width: 100vw;
+    overflow:  hidden;
+    padding:   14px;
+  }
+
+  /* Header wraps to two rows on tablet. */
+  .dashboard-header {
+    align-items:  flex-start;
+    flex-wrap:    wrap;
+    padding:      16px 16px 16px 68px;
+    min-height:   74px;
+  }
+
+  /* Show the hamburger button and keep it reachable while the page scrolls. */
+  .menu-toggle {
+    position: fixed;
+    top:      14px;
+    left:     14px;
+    z-index:  50;
+    display:  block;
+    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.26);
+  }
+
+  /* Title takes remaining width beside the hamburger. */
+  .dashboard-title {
+    flex: 1 1 calc(100% - 60px);
+  }
+
+  /* Actions row spans full width under the title. */
+  .header-actions {
+    min-width:       0;
+    width:           100%;
+    justify-content: space-between;
+  }
+}
+
+
+/* ================================================================
+  29. RESPONSIVE — 620 px (small mobile)
+   Single-column layouts; slightly taller charts.
+   ================================================================ */
+@media (max-width: 620px) {
+
+  .dashboard-content {
+    padding: 10px;
+  }
+
+  /* Reduce padding on dense elements. */
+  .dashboard-header,
+  .analytics-panel,
+  .metric-card {
+    padding: 14px;
+  }
+
+  .dashboard-header {
+    padding-left: 66px;
+  }
+
+  /* Stack KPI cards and quick-actions into a single column. */
+  .kpi-grid,
+  .quick-actions {
+    grid-template-columns: 1fr;
+  }
+
+  /* Stack actions, panel headings, and the utilization meter vertically. */
+  .header-actions,
+  .panel-heading,
+  .utilization-meter {
+    display:               grid;
+    grid-template-columns: 1fr;
+  }
+
+  /* Range / metric tabs fill the full row width. */
+  .range-tabs,
+  .metric-switch {
+    width:             100%;
+    grid-auto-columns: 1fr;
+  }
+
+  .range-tabs button,
+  .metric-switch button {
+    padding-inline: 4px;
+  }
+
+  /* Logout button fills the row. */
+  .logout-btn {
+    width: 100%;
+  }
+
+  /* Give charts more vertical room on small screens. */
+  .chart-wrap,
+  .chart-wrap.tall {
+    height:     260px;
+    min-height: 260px;
+  }
+
+  /* Centre the utilization ring when it stacks alone. */
+  .meter-ring {
+    margin: 0 auto;
+  }
+}

@@ -1,4 +1,11 @@
 venv/
+.venv/
 __pycache__/
 .git/
 *.pyc
+.env
+.env.local
+*.sql
+backups/
+start.sh
+backup.sh
