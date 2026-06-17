@@ -27,6 +27,7 @@ import {
   Tooltip,
   XAxis,
   YAxis,
+  Sector, // Import Sector for Pie custom active shape
 } from "recharts";
 import api from "../services/api";
 import "../styles/dashboard.css";
@@ -96,6 +97,63 @@ const formatNumber = (value = 0) =>
 const getPercent = (part = 0, total = 0) =>
   total > 0 ? Math.round((part / total) * 100) : 0;
 
+/**
+ * Formats a raw database string or key to uppercase with spaces for a premium UI.
+ */
+const formatDisplayName = (str = "") => {
+  if (!str) return "";
+  return str.replace(/_/g, " ").toUpperCase();
+};
+
+/**
+ * Custom active shape rendering for the Pie/Donut chart.
+ * Renders a blurred black Sector first (background shadow),
+ * followed by the hovered sector with a slightly expanded radius (pop out)
+ * and a glowing drop shadow of its own color.
+ */
+const renderActiveShape = (props) => {
+  const {
+    cx,
+    cy,
+    innerRadius,
+    outerRadius,
+    startAngle,
+    endAngle,
+    fill,
+  } = props;
+
+  return (
+    <g>
+      {/* Background shadow left behind the popped out area */}
+      <Sector
+        cx={cx}
+        cy={cy}
+        innerRadius={innerRadius}
+        outerRadius={outerRadius}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        fill="rgba(0, 0, 0, 0.45)"
+        style={{ filter: "blur(4px)" }}
+        stroke="none"
+      />
+      {/* Popped out active sector with larger outer radius */}
+      <Sector
+        cx={cx}
+        cy={cy}
+        innerRadius={innerRadius}
+        outerRadius={outerRadius + 8} /* Pops out */
+        startAngle={startAngle}
+        endAngle={endAngle}
+        fill={fill}
+        style={{
+          filter: `drop-shadow(0 4px 12px ${fill}40)` /* Glowing drop-shadow */
+        }}
+        stroke="none"
+      />
+    </g>
+  );
+};
+
 
 /* ================================================================
    COUNT-UP VALUE COMPONENT
@@ -158,6 +216,8 @@ function Dashboard() {
   const [activeNav,     setActiveNav]     = useState("Overview"); // Highlighted nav item
   const [range,         setRange]         = useState("All");      // Chart time-range filter
   const [focusedMetric, setFocusedMetric] = useState("Revenue");  // Highlighted KPI card / chart tab
+  const [activePieIndex, setActivePieIndex] = useState(null);     // Track hovered Pie slice index
+  const [activeBarIndex, setActiveBarIndex] = useState(null);     // Track hovered Bar chart item index
   const [error,         setError]         = useState("");         // API error message
 
 
@@ -301,9 +361,29 @@ function Dashboard() {
     return monthlyData; // "All" — no slice
   }, [monthlyData, range]);
 
-  // Distribution arrays used by pie and bar charts.
-  const shipmentStatus = charts?.shipment_status_distribution || [];
-  const tripStatus     = charts?.trip_status_distribution     || [];
+  // Distribution arrays used by pie and bar charts formatted for UI display.
+  const shipmentStatus = useMemo(() => {
+    return (charts?.shipment_status_distribution || []).map((item) => ({
+      ...item,
+      status: formatDisplayName(item.status),
+    }));
+  }, [charts]);
+
+  const tripStatus = useMemo(() => {
+    return (charts?.trip_status_distribution || []).map((item) => ({
+      ...item,
+      status: formatDisplayName(item.status),
+    }));
+  }, [charts]);
+
+  // Derived financial metric focus tab
+  const activeMetric = useMemo(() => {
+    const lower = focusedMetric.toLowerCase();
+    if (lower.includes("revenue")) return "Revenue";
+    if (lower.includes("fuel")) return "Fuel";
+    if (lower.includes("profit")) return "Profit";
+    return "Revenue";
+  }, [focusedMetric]);
 
   // Aggregate counts used on cards and the summary panel.
   const totalTrips    = (stats?.active_trips    || 0) + (stats?.completed_trips || 0);
@@ -316,46 +396,38 @@ function Dashboard() {
 
   /**
    * KPI card configuration array.
-   * Each entry maps to one .metric-card in the .kpi-grid.
-   *   label     — displayed label text
-   *   value     — raw number passed to CountUpValue
-   *   formatter — currency or number formatter
-   *   suffix    — optional text appended after the count (e.g. " / 10")
-   *   meta      — sub-label below the count
-   *   tone      — CSS tone class suffix: gold | green | blue | red
-   *   progress  — 0–100 integer for the progress bar fill
    */
   const kpis = [
     {
-      label:     "Total Revenue",
+      label:     "TOTAL REVENUE",
       value:     stats?.total_revenue,
       formatter: formatCurrency,
-      meta:      `${profitMargin}% margin`,
+      meta:      `${profitMargin}% MARGIN`,
       tone:      "gold",
       progress:  Math.min(Math.max(profitMargin, 0), 100),
     },
     {
-      label:     "Total Profit",
+      label:     "TOTAL PROFIT",
       value:     stats?.total_profit,
       formatter: formatCurrency,
-      meta:      `${formatCurrency(stats?.fuel_cost)} fuel cost`,
+      meta:      `${formatCurrency(stats?.fuel_cost)} FUEL COST`,
       tone:      "green",
       progress:  Math.min(Math.max(profitMargin, 0), 100),
     },
     {
-      label:     "Active Trucks",
+      label:     "ACTIVE TRUCKS",
       value:     stats?.active_trucks,
       formatter: formatNumber,
       suffix:    ` / ${formatNumber(stats?.total_trucks)}`,
-      meta:      `${activeTruckPercent}% fleet ready`,
+      meta:      `${activeTruckPercent}% FLEET READY`,
       tone:      "blue",
       progress:  activeTruckPercent,
     },
     {
-      label:     "Pending Shipments",
+      label:     "PENDING SHIPMENTS",
       value:     stats?.pending_shipments,
       formatter: formatNumber,
-      meta:      `${pendingShipmentPercent}% need action`,
+      meta:      `${pendingShipmentPercent}% NEED ACTION`,
       tone:      "red",
       progress:  pendingShipmentPercent,
     },
@@ -363,16 +435,12 @@ function Dashboard() {
 
   /**
    * Operational summary table rows.
-   * Each entry maps to one clickable button in the .data-table.
-   *   label  — row heading
-   *   value  — count shown on the right
-   *   status — sub-label below the heading
    */
   const operationalRows = [
-    { label: "Drivers",          value: stats?.total_drivers,   status: "Available roster"    },
-    { label: "Trips in progress", value: stats?.active_trips,    status: "Currently moving"   },
-    { label: "Completed trips",  value: stats?.completed_trips, status: "Closed routes"       },
-    { label: "Total shipments",  value: stats?.total_shipments, status: "All shipment records" },
+    { label: "DRIVERS",            value: stats?.total_drivers,   status: "AVAILABLE ROSTER"    },
+    { label: "TRIPS IN PROGRESS",   value: stats?.active_trips,    status: "CURRENTLY MOVING"   },
+    { label: "COMPLETED TRIPS",    value: stats?.completed_trips, status: "CLOSED ROUTES"       },
+    { label: "TOTAL SHIPMENTS",    value: stats?.total_shipments, status: "ALL SHIPMENT RECORDS" },
   ];
 
   /**
@@ -603,12 +671,21 @@ function Dashboard() {
              * Range buttons trim the chart data client-side.
              * No new API call is made when switching range.
              */}
-            <div className="range-tabs" aria-label="Chart time range">
+            <div className="range-tabs" aria-label="Chart time range" style={{ position: "relative" }}>
+              {/* iOS glass sliding slider indicator background */}
+              <div 
+                className="slider-indicator" 
+                style={{
+                  left: `calc(${["3M", "6M", "9M", "12M", "All"].indexOf(range) * 20}% + 4px)`,
+                  width: "calc(20% - 8px)"
+                }}
+              />
               {["3M", "6M", "9M", "12M", "All"].map((label) => (
                 <button
                   key={label}
                   className={range === label ? "active" : ""}
                   onClick={() => setRange(label)}
+                  style={{ position: "relative", zIndex: 1 }}
                 >
                   {label}
                 </button>
@@ -678,15 +755,28 @@ function Dashboard() {
                 <h2>Revenue vs fuel cost</h2>
               </div>
 
-              {/* Metric-focus tabs: clicking one changes focusedMetric. */}
-              <div className="metric-switch">
+              {/* Metric-focus tabs: clicking one changes activeMetric and updates KPI card focus */}
+              <div className="metric-switch" style={{ position: "relative" }}>
+                {/* iOS glass sliding slider indicator background */}
+                <div 
+                  className="slider-indicator" 
+                  style={{
+                    left: `calc(${["Revenue", "Fuel", "Profit"].indexOf(activeMetric) * 33.333}% + 4px)`,
+                    width: "calc(33.333% - 8px)"
+                  }}
+                />
                 {["Revenue", "Fuel", "Profit"].map((label) => (
                   <button
                     key={label}
-                    className={focusedMetric === label ? "active" : ""}
-                    onClick={() => setFocusedMetric(label)}
+                    className={activeMetric === label ? "active" : ""}
+                    onClick={() => {
+                      if (label === "Revenue") setFocusedMetric("TOTAL REVENUE");
+                      else if (label === "Profit") setFocusedMetric("TOTAL PROFIT");
+                      else setFocusedMetric(label);
+                    }}
+                    style={{ position: "relative", zIndex: 1 }}
                   >
-                    {label}
+                    {label.toUpperCase()}
                   </button>
                 ))}
               </div>
@@ -706,6 +796,11 @@ function Dashboard() {
                     <linearGradient id="fuelFill" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%"  stopColor="#16c8c8" stopOpacity={0.28} />
                       <stop offset="95%" stopColor="#16c8c8" stopOpacity={0.02} />
+                    </linearGradient>
+                    {/* Profit fill gradient — from semi-transparent green to clear. */}
+                    <linearGradient id="profitFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%"  stopColor="#22c55e" stopOpacity={0.25} />
+                      <stop offset="95%" stopColor="#22c55e" stopOpacity={0.02} />
                     </linearGradient>
                   </defs>
 
@@ -733,31 +828,40 @@ function Dashboard() {
                   />
 
                   {/* Revenue area (amber). */}
-                  <Area
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="#ff9a1a"
-                    fill="url(#revenueFill)"
-                    strokeWidth={3}
-                  />
+                  {activeMetric === "Revenue" && (
+                    <Area
+                      name="REVENUE"
+                      type="monotone"
+                      dataKey="revenue"
+                      stroke="#ff9a1a"
+                      fill="url(#revenueFill)"
+                      strokeWidth={3}
+                    />
+                  )}
 
                   {/* Fuel cost area (teal). */}
-                  <Area
-                    type="monotone"
-                    dataKey="fuel_cost"
-                    stroke="#16c8c8"
-                    fill="url(#fuelFill)"
-                    strokeWidth={2}
-                  />
+                  {activeMetric === "Fuel" && (
+                    <Area
+                      name="FUEL COST"
+                      type="monotone"
+                      dataKey="fuel_cost"
+                      stroke="#16c8c8"
+                      fill="url(#fuelFill)"
+                      strokeWidth={3}
+                    />
+                  )}
 
-                  {/* Profit line (green) — no fill, just the stroke. */}
-                  <Line
-                    type="monotone"
-                    dataKey="profit"
-                    stroke="#22c55e"
-                    strokeWidth={2}
-                    dot={false}
-                  />
+                  {/* Profit area (green). */}
+                  {activeMetric === "Profit" && (
+                    <Area
+                      name="PROFIT"
+                      type="monotone"
+                      dataKey="profit"
+                      stroke="#22c55e"
+                      fill="url(#profitFill)"
+                      strokeWidth={3}
+                    />
+                  )}
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -824,12 +928,18 @@ function Dashboard() {
                     innerRadius="58%"
                     outerRadius="82%"
                     paddingAngle={4}
+                    stroke="none"
+                    activeIndex={activePieIndex}
+                    activeShape={renderActiveShape}
+                    onMouseEnter={(_, index) => setActivePieIndex(index)}
+                    onMouseLeave={() => setActivePieIndex(null)}
                   >
                     {/* Each slice gets the next colour from the palette. */}
                     {shipmentStatus.map((entry, index) => (
                       <Cell
                         key={entry.status}
                         fill={chartColors[index % chartColors.length]}
+                        style={{ cursor: "pointer" }}
                       />
                     ))}
                   </Pie>
@@ -872,20 +982,38 @@ function Dashboard() {
                   <XAxis dataKey="status" tickLine={false} axisLine={false} />
                   <YAxis allowDecimals={false} tickLine={false} axisLine={false} />
                   <Tooltip
+                    cursor={false} /* Disabled default rectangular category cursor slit */
                     contentStyle={{
-                      background:   "#08101f",
+                      background:   "#ffffff48",
                       border:       "1px solid rgba(255,154,26,0.26)",
                       borderRadius: 8,
                     }}
                   />
                   {/* Rounded top corners on bars (radius: [top-l, top-r, btm-r, btm-l]). */}
-                  <Bar dataKey="count" radius={[6, 6, 0, 0]}>
-                    {tripStatus.map((entry, index) => (
-                      <Cell
-                        key={entry.status}
-                        fill={chartColors[index % chartColors.length]}
-                      />
-                    ))}
+                  <Bar dataKey="count" basecolor radius={[6, 6, 0, 0]}>
+                    {tripStatus.map((entry, index) => {
+                      const isHovered = index === activeBarIndex;
+                      const baseColor = chartColors[index % chartColors.length];
+                      // Hovered bar stands out, other bars fade out
+                      const fill = isHovered 
+                        ? baseColor 
+                        : (activeBarIndex !== null ? `${baseColor}4D` : baseColor);
+                      return (
+                        <Cell
+                          key={entry.status}
+                          fill={fill}
+                          style={{
+                            cursor: "pointer",
+                            filter: isHovered ? `drop-shadow(0 4px 12px ${baseColor}80)` : "none",
+                            transform: isHovered ? "translateY(-4px)" : "translateY(0)",
+                            transformOrigin: "bottom",
+                            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                          }}
+                          onMouseEnter={() => setActiveBarIndex(index)}
+                          onMouseLeave={() => setActiveBarIndex(null)}
+                        />
+                      );
+                    })}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>

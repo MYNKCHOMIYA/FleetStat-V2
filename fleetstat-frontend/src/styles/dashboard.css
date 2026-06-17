@@ -62,13 +62,13 @@ body,
    ---------------------------------------------------------------- */
 .dashboard-shell {
   /* Layout collapse animation — matched across shell + sidebar + children. */
-  --sidebar-width:    250px;
-  --sidebar-duration: 120ms;
-  --sidebar-ease:     linear;
-
+  --sidebar-width:    200px;
+ 
+  
+  
   /* Hover / interactive feedback — snappier than layout. */
   --ui-duration: 150ms;
-  --ui-ease:     linear;
+  --ui-ease  : 50ms;
 }
 
 
@@ -97,6 +97,7 @@ body,
 
   /* Hint to the browser to GPU-composite this element. */
   will-change: grid-template-columns;
+  
 }
 
 /* All buttons inside the shell inherit the body font. */
@@ -127,7 +128,7 @@ body,
   /* Horizontal padding shrinks when collapsed. */
   padding: 22px 16px;
 
-  background:     rgba(5, 11, 24, 0);
+  background:     rgba(0, 0, 0, 0.003);
   border-right:   1px solid rgba(255, 156, 26, 0.644);
   backdrop-filter:         blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -153,6 +154,9 @@ body,
 .sidebar-inner {
   display: flex;
   flex-direction: column;
+  padding-top: 5px;
+  /* Fixed invalid padding-bottom unit syntax error */
+  padding-bottom: 5px;
   gap: 18px;
 
   /* Fill sidebar height so margin-top: auto on logout works. */
@@ -166,6 +170,8 @@ body,
    Items with explicit width:100% (nav, logout) still span the full rail. */
 .dashboard-sidebar.is-collapsed .sidebar-inner {
   align-items: center;
+  padding-top: 20px;
+  padding-bottom: 20px;
 }
 
 
@@ -212,10 +218,11 @@ body,
 
 /* Pure-CSS chevron arrow — no icon library required. */
 .collapse-icon {
-  width:       10px;
-  height:      10px;
-  border-top:  2px solid currentColor;
-  border-left: 2px solid currentColor;
+  width:       15px;
+  height:      15px;
+  border-top:  5px solid currentColor;
+  border-left: 5px solid currentColor;
+  
 
   /* Default: points left (← = expanded, indicates collapse). */
   transform: rotate(-45deg);
@@ -343,7 +350,7 @@ body,
    ---------------------------------------------------------------- */
 .sidebar-nav {
   display: grid;
-  gap:     6px;
+  gap:     20px;
   /* Always fill the full sidebar width, even in collapsed mode. */
   width:   100%;
 }
@@ -394,16 +401,28 @@ body,
     align-items: center;
     width: 100%;       /* Ensures the button takes full sidebar width */
     padding: 8px;
-    min-height: 9px;
+    /* Fixed collapsed sizing and borders from invalid layout values */
+    min-height: 46px;
+    border: 2px solid transparent;
+    box-shadow:     0 2px 2px rgba(228, 210, 8, 0);
+
+
+    transition:
+    transform        0.26s var(--ui-ease),
+    border-color     0.26s var(--ui-ease),
+    background-color 0.26s var(--ui-ease),
+    box-shadow       0.26s var(--ui-ease);
+
 }
 
 
 /* Hover and active states for nav buttons. */
 .sidebar-nav button:hover,
 .sidebar-nav button.active {
-  color:        #ffffff;
-  background:   rgba(255, 154, 26, 0.12);
-  border-color: rgba(255, 154, 26, 0.28);
+  color:   #000000;
+  transform:        translateY(-4px);
+  background-color: rgb(221, 136, 8);
+  border-color: #000000;
 }
 
 /* Coloured icon tile inside each nav button. */
@@ -433,20 +452,27 @@ body,
 
 /* Scale + brighten icon when button is hovered or active. */
 .sidebar-nav button:hover .nav-icon{
+  font-family:    var(--heading);
   transform: scale(2);
+  background-color: #00000000;
+  color: rgb(0, 0, 0);
 
 }
 .sidebar-nav button.active .nav-icon {
   transform:  scale(1.5);
-  background: var(--amber);
+  background-color: #00000000;
+  font-family:    var(--heading);
+  
 }
 
 /* Nav label text — slides and fades out as sidebar collapses. */
 .nav-label {
   min-width:     0;
   max-width:     140px;
+  font-size:  relative;
+  font-weight:  1000;
   opacity:       1;
-  transform:     translateX(0);
+  transform:     translateX(0); 
   overflow:      hidden;
   text-overflow: ellipsis;
   white-space:   nowrap;
@@ -456,7 +482,6 @@ body,
     max-width var(--sidebar-duration) var(--sidebar-ease),
     transform 0.20s var(--sidebar-ease);
 }
-
 .dashboard-sidebar.is-collapsed .nav-label {
   max-width:      0;
   opacity:        0;
@@ -466,7 +491,7 @@ body,
 
 /* Status badge text (e.g. "Live", "Soon"). */
 .sidebar-nav small {
-  color:          rgba(255, 189, 90, 0.76);
+  color:          rgba(0, 0, 0, 0.76);
   font-size:      10px;
   text-transform: uppercase;
   white-space:    nowrap;
@@ -555,6 +580,7 @@ body,
   min-height:   44px;
   width:        100%;        /* always fills the full rail width */
   border-radius: 8px;
+  /* Fixed layout border from incorrect 90px width */
   border:        1px solid transparent;
   padding:       0 12px;
 
@@ -575,7 +601,7 @@ body,
 }
 
 .sidebar-logout:hover {
-  border-color: rgb(0, 0, 0);
+  border-color: rgb(196, 11, 11);
   transform:  translateY(-2px);
 }
 
@@ -586,7 +612,8 @@ body,
     align-items: center;
     width: 100%;       /* Ensures the button takes full sidebar width */
     padding: 8px;
-    min-height: 9px;
+    /* Fixed collapsed sizing */
+    min-height: 44px;
 }
 
 
@@ -606,8 +633,10 @@ body,
 
 /* Logout label text — slides and fades out when collapsed. */
 .logout-label {
+  font-family:    var(--heading);
   min-width:   0;
   max-width:   90px;
+  color: #000000;
   opacity:     1;
   overflow:    hidden;
   white-space: nowrap;
@@ -689,25 +718,6 @@ body,
   flex-shrink: 0;
 }
 
-
-/* ----------------------------------------------------------------
-  14. EYEBROW LABEL
-   Small uppercase text above the main heading.
-   The ::before pseudo-element is a pulsing live-dot.
-   ---------------------------------------------------------------- */
-.eyebrow {
-  display:        inline-flex;
-  align-items:    center;
-  gap:            8px;
-  color:          var(--amber-light);
-  font-size:      11px;
-  font-weight:    700;
-  letter-spacing: 1.2px;
-  text-transform: uppercase;
-}
-
-
-
 /* Main gradient heading. Edit the gradient stops to retheme. */
 .dashboard-title h1 {
   margin:         5px 0 4px;
@@ -732,17 +742,38 @@ body,
 /* ----------------------------------------------------------------
   15. RANGE & METRIC SEGMENTED TABS
    Pill-shaped containers for time-range and metric-focus buttons.
+   Features an iOS-style glass sliding indicator.
    ---------------------------------------------------------------- */
 .range-tabs,
 .metric-switch {
+  position:          relative;
   display:          inline-grid;
   grid-auto-flow:   column;
+  grid-auto-columns: 1fr; /* Ensures equal column width for slider alignment */
   max-width:        100%;
-  gap:              4px;
+  gap:              0px;
   padding:          4px;
   border-radius:    8px;
-  background:       rgba(255, 255, 255, 0.06);
-  border:           1px solid rgba(255, 255, 255, 0.09);
+  background:       rgba(255, 255, 255, 0.05);
+  border:           1px solid rgba(255, 255, 255, 0.08);
+  overflow:         hidden;
+  z-index:          1;
+}
+
+/* iOS glass sliding indicator */
+.slider-indicator {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  background: rgba(255, 255, 255, 0.12); /* Frosted glass look */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 6px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.28);
+  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1); /* iOS-smooth transition easing curve */
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* Remove default browser borders for these controls. */
@@ -762,37 +793,31 @@ body,
   height:       32px;
   padding:      0 8px;
   border-radius: 6px;
-  background:   transparent;
-  color:        rgba(255, 255, 255, 0.60);
+  background:   transparent !important;
+  color:        rgba(255, 255, 255, 0.65);
   font-size:    13px;
-  font-weight:  700;
+  font-weight:  800;
+  position:     relative;
+  z-index:      1;
  
-
-  /* Colour + fill fade when switching tabs. */
+  /* Simple transition for text color */
   transition:
-    background var(--ui-duration) var(--ui-ease),
     color      var(--ui-duration) var(--ui-ease);
 }
 
 .range-tabs button:hover,
 .metric-switch button:hover {
   color:      #ffffff;
-  background: rgba(255, 255, 255, 0.09);
-   transform: scale(1.2);
+  background: transparent !important;
+  transform:  none !important;
 }
 
-/* Active tab — amber fill, dark text. */
+/* Active tab — transparent background (slider handles visual capsule), bold white text. */
 .range-tabs button.active,
 .metric-switch button.active {
-  color:      #07101d;
-  background: var(--amber);
-   transform: scale(1.1);
-}
-
-/* Slightly lighter amber on hover when already active. */
-.range-tabs button.active:hover,
-.metric-switch button.active:hover {
-  background: var(--amber-light);
+  color:      #ffffff !important;
+  background: transparent !important;
+  transform:  none !important;
 }
 
 
@@ -818,6 +843,7 @@ body,
 .logout-btn {
   color:      #00000096;
   background: linear-gradient(in oklab to bottom right, #da8a12, #c82121);
+  /* Removed invalid box-sizing attribute */
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.613);
 }
 
@@ -892,10 +918,10 @@ body,
 
   /* Smooth lift, border glow, and shadow on hover/focus/selected. */
   transition:
-    transform        0.26s var(--ui-ease),
-    border-color     0.26s var(--ui-ease),
-    background-color 0.26s var(--ui-ease),
-    box-shadow       0.26s var(--ui-ease);
+    transform        .25s var(--ui-ease),
+    border-color     .25s var(--ui-ease),
+    background-color .25s var(--ui-ease),
+    box-shadow       .25s var(--ui-ease);
 }
 
 /* All cards lift the same amount when interacted with. */
@@ -978,7 +1004,7 @@ body,
 .metric-progress {
   height:        5px;
   border-radius: 999px;
-  background:    rgba(255, 255, 255, 0.08);
+  background:    rgba(255, 255, 255, 0.075);
   overflow:      hidden;
   margin-top:    8px;
 }
@@ -1141,8 +1167,8 @@ body,
 }
 
 /* Gentle grow + glow when the meter panel is hovered. */
-.utilization-meter:hover .meter-ring {
-  transform:  scale(1.04);
+.meter-ring:hover {
+  transform:  scale(1.15);
   box-shadow: 0 0 42px rgba(255, 154, 26, 0.30);
 }
 
@@ -1171,7 +1197,7 @@ body,
 /* Stat rows to the right of the ring. */
 .meter-details {
   display: grid;
-  gap:     8px;
+  gap:     12px;
 }
 
 .meter-details p {
@@ -1185,12 +1211,18 @@ body,
 .meter-details strong {
   color: #ffffff;
 }
-
+ .meter-details p:hover{
+  transform: scale(1.05);
+  font-weight: 500;
+  font-family: var(--heading);
+  box-shadow: 0 0 42px rgba(26, 255, 228, 0.096);
+ }
 
 /* ----------------------------------------------------------------
   23. LEGEND PILLS
    Coloured dot + status label for the pie chart.
    ---------------------------------------------------------------- */
+
 .legend-list {
   min-width:  0;
   display:    flex;
@@ -1216,7 +1248,7 @@ body,
 }
 
 .legend-list span:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.795);
   transform:  translateY(-1px);
 }
 
@@ -1233,12 +1265,15 @@ body,
   24. OPERATIONAL SUMMARY TABLE
    Clickable button rows designed for future drill-down pages.
    ---------------------------------------------------------------- */
+
+
 .data-table {
   display: grid;
   gap:     8px;
 }
 
 .data-table button {
+  font-family: var(--heading);
   min-width:      0;
   min-height:     62px;
   border-radius:  8px;
@@ -1254,8 +1289,8 @@ body,
 
 .data-table button:hover {
   transform:    translateY(-2px);
-  border-color: rgba(255, 154, 26, 0.28);
-  background:   rgba(255, 154, 26, 0.09);
+  border-color: #ff9102;
+  background:   rgba(26, 255, 224, 0.09);
 }
 
 /* Row label (left column, first row). */
@@ -1287,12 +1322,14 @@ body,
    Replace onClick handlers with router.push() when pages exist.
    ---------------------------------------------------------------- */
 .quick-actions {
+  font-family: var(--heading);
   display:               grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap:                   8px;
 }
 
 .quick-actions button {
+  font-family: var(--heading);
   min-width:     0;
   min-height:    46px;
   border-radius: 8px;
