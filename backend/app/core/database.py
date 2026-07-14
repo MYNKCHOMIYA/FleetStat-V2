@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
-from sqlalchemy.orm import sessionmaker,DeclarativeBase
+from sqlalchemy.orm import sessionmaker
 import os
 load_dotenv()
 database_url :str |None = os.getenv("DATABASE_URL")
@@ -15,8 +15,7 @@ engine = create_engine(database_url,echo = True)
 
 SessionLocal = sessionmaker(autoflush = False,bind=engine)
 
-class base(DeclarativeBase):
-    pass
+
 
 
 def get_db():
@@ -29,4 +28,4 @@ def get_db():
     finally:
         db.close()
     
-base.metadata.create_all(bind=engine)
+

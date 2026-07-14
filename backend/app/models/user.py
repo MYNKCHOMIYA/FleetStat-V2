@@ -5,7 +5,7 @@ from datetime import datetime
 import uuid
 
 class user(Base):
-    __tablename = "users"
+    __tablename__ = "users"
     
     user_id : Mapped[str] = mapped_column(
         String, primary_key=True,default=lambda:str(uuid.uuid4)
