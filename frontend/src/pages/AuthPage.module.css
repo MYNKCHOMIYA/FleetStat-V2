@@ -1,0 +1,131 @@
+.page {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.controls {
+  position: fixed;
+  top: 20px;
+  right: 24px;
+  z-index: 100;
+}
+
+.card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 448px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 44px 40px 36px;
+  box-shadow: var(--shadow-card), var(--shadow-glow);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Brand */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 36px;
+}
+
+.brandIcon {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 24px var(--accent-glow);
+  flex-shrink: 0;
+}
+.brandIcon svg {
+  width: 24px;
+  height: 24px;
+  fill: #fff;
+}
+.brandText {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+  gap: 4px;
+}
+.brandName {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  background: linear-gradient(90deg, var(--text-primary), var(--accent-2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.brandSub {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 28px;
+}
+.tabBtn {
+  flex: 1;
+  padding: 10px 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: 9px;
+  cursor: pointer;
+  position: relative;
+  font-family: inherit;
+  transition: color 0.2s;
+  overflow: hidden;
+}
+.tabBtn:hover:not(.tabActive) {
+  color: var(--text-secondary);
+}
+.tabActive {
+  color: var(--text-primary);
+}
+.tabIndicator {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border-radius: 9px;
+  z-index: -1;
+  box-shadow: 0 2px 16px var(--accent-glow);
+}
+
+/* Panel */
+.panelWrap {
+  overflow: hidden;
+  min-height: 280px;
+}
+
+.footer {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.2px;
+}

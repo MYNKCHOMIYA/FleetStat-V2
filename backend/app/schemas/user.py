@@ -9,16 +9,18 @@ class UserRole(str,Enum):
     
 
 class UserCreate(BaseModel):
-    email:EmailStr
-    password:str
+    username: str
+    email: EmailStr
+    password: str
     role: UserRole = UserRole.USER
     
 class UserResponse(BaseModel):
-    user_id:str
-    email:EmailStr
-    is_active:bool
-    role:UserRole
+    user_id: str
+    username: str
+    email: EmailStr
+    is_active: bool
+    role: UserRole
     
-    model_config =ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True)
     
     

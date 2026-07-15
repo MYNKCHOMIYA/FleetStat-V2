@@ -9,18 +9,14 @@ from app.models.base import Base
 from app.models.user import User
 
 # Load environment variables
-load_dotenv()
+from app.core.config import settings
 
 # This is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 
-# Dynamically set the database URL from the environment variables
-db_url = os.getenv("DATABASE_URL")
-if db_url:
-    if db_url.startswith("postgres://"):
-        db_url = db_url.replace("postgres://", "postgresql://", 1)
-    config.set_main_option("sqlalchemy.url", db_url)
+# Dynamically set the database URL from settings
+config.set_main_option("sqlalchemy.url", settings.get_database_url())
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

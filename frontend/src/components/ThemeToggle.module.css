@@ -1,0 +1,31 @@
+.toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.track {
+  width: 52px;
+  height: 28px;
+  border-radius: 99px;
+  border: 1px solid var(--border);
+  position: relative;
+  display: flex;
+  align-items: center;
+  transition: border-color 0.3s;
+  padding: 0 3px;
+}
+
+.thumb {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
